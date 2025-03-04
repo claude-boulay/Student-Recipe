@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Student-Recipe</string>
+    <string name="title_activity_recipe_list_screen">RecipeListScreen</string>
+    <string name="title_activity_recipe_details_screen">RecipeDetailsScreen</string>
 </resources>
