@@ -22,7 +22,7 @@ fun RecipeCard(recipe: Recipe, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .clickable(onClick = onClick), // Déplacer onClick ici
+            .clickable(onClick = onClick),
         shape = MaterialTheme.shapes.medium.copy(CornerSize(16.dp)),
         colors = CardDefaults.cardColors(containerColor = Color.Gray)
     ) {

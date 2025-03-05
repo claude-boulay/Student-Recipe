@@ -12,7 +12,7 @@ open class RecipeRepository(
 ) {
     suspend fun getRecipes(query: String, page: Int): List<Recipe> {
         return try {
-            val response = recipeApi.searchRecipes(query, page) // ✅ Correct
+            val response = recipeApi.searchRecipes(query, page)
             response.results
         } catch (e: Exception) {
             recipeDao.getAllRecipes().map { it.toRecipe() }
@@ -21,9 +21,9 @@ open class RecipeRepository(
     suspend fun getRecipeById(recipeId: Int): Recipe? {
         return try {
             val response = recipeApi.getRecipeById(recipeId)
-            response ?: recipeDao.getRecipeById(recipeId) // Si API échoue, on prend la version locale
+            response ?: recipeDao.getRecipeById(recipeId)
         } catch (e: Exception) {
-            recipeDao.getRecipeById(recipeId) // En cas d'erreur réseau, on utilise la version locale
+            recipeDao.getRecipeById(recipeId)
         }
     }
 }

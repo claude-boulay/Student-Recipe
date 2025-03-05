@@ -27,7 +27,7 @@ fun RecipeListScreen(navController: NavController, repository: RecipeRepository)
         isLoading = true
         errorMessage = null
         try {
-            recipes = repository.getRecipes(query.text, 1) // Appel sécurisé
+            recipes = repository.getRecipes(query.text, 1)
         } catch (e: Exception) {
             errorMessage = "Erreur de chargement des recettes."
         }

@@ -8,9 +8,9 @@ import androidx.room.PrimaryKey
 data class RecipeEntity(
     @PrimaryKey val id: Int,
     val title: String,
-    val featured_image: String, // Vérifie que ce champ correspond à `imageUrl` si nécessaire
+    val featured_image: String,
     val publisher: String,
-    val ingredients: List<String>, // Doit être converti avec un TypeConverter
-    val imageUrl: String, // Assure-toi d'ajouter cette colonne !
-    val description: String // Assure-toi d'ajouter cette colonne aussi !
+    val ingredients: List<String>,
+    val imageUrl: String,
+    val description: String
 )
