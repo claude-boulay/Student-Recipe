@@ -22,18 +22,29 @@ fun RecipeListScreen(navController: NavController, repository: RecipeRepository)
     var query by remember { mutableStateOf(TextFieldValue("")) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var currentPage by remember { mutableStateOf(1) }
+
 
     LaunchedEffect(query.text) {
+        currentPage = 1
+        loadRecipes()
+    }
+
+    fun loadRecipes() {
+        if (isLoading) return
+
         isLoading = true
         errorMessage = null
         try {
-            recipes = repository.getRecipes(query.text, 1)
+            val newRecipes = repository.getRecipes(query.text, currentPage)
+            recipes = if (currentPage == 1) newRecipes else recipes + newRecipes
         } catch (e: Exception) {
             errorMessage = "Erreur de chargement des recettes."
         }
         isLoading = false
     }
 
+    // Interface utilisateur
     Column(modifier = Modifier.fillMaxSize()) {
         SearchBar(query = query, onQueryChanged = { query = it })
 
@@ -46,11 +57,24 @@ fun RecipeListScreen(navController: NavController, repository: RecipeRepository)
                 Text(text = errorMessage ?: "Une erreur est survenue", color = MaterialTheme.colorScheme.error)
             }
         } else {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
                 items(recipes) { recipe ->
                     RecipeCard(recipe = recipe, onClick = {
                         navController.navigate("details/${recipe.id}")
                     })
+                }
+
+                item {
+                    if (!isLoading && recipes.isNotEmpty()) {
+                        LaunchedEffect(recipes.size) {
+                            currentPage++
+                            loadRecipes()
+                        }
+                    }
                 }
             }
         }
@@ -73,6 +97,4 @@ fun SearchBar(query: TextFieldValue, onQueryChanged: (TextFieldValue) -> Unit) {
 @Composable
 fun PreviewRecipeList() {
     val navController = rememberNavController()
-
-
 }

@@ -60,18 +60,21 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("androidx.navigation:navigation-compose:2.6.0")
+
     // Room
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
-    kapt("androidx.room:room-compiler:2.6.1") // Bien s'assurer que KAPT est ajouté
+    kapt("androidx.room:room-compiler:2.6.1")
 
     // Gson pour les TypeConverters
     implementation("com.google.code.gson:gson:2.10")
 
-    // Coroutine and ViewModel
+    // Coroutine & ViewModel
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.0")
 
+    implementation("androidx.compose.ui:ui:1.4.0")
+    implementation("androidx.compose.material3:material3:1.0.0")
 
-
+    implementation("io.coil-kt:coil-compose:2.3.0")
 }

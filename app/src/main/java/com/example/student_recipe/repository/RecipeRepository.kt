@@ -14,10 +14,13 @@ open class RecipeRepository(
         return try {
             val response = recipeApi.searchRecipes(query, page)
             response.results
+        } catch (e: java.net.UnknownHostException) {
+            throw Exception("Pas de connexion Internet. Vérifie ta connexion réseau.")
         } catch (e: Exception) {
-            recipeDao.getAllRecipes().map { it.toRecipe() }
+            throw Exception("Erreur inconnue. Impossible de charger les recettes.")
         }
     }
+
     suspend fun getRecipeById(recipeId: Int): Recipe? {
         return try {
             val response = recipeApi.getRecipeById(recipeId)
@@ -27,6 +30,7 @@ open class RecipeRepository(
         }
     }
 }
+
 private fun RecipeEntity.toRecipe(): Recipe {
     return Recipe(
         id = this.id,
