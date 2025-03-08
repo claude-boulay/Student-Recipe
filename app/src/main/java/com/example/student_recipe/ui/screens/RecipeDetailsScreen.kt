@@ -80,6 +80,7 @@ fun PreviewRecipeDetail() {
         title = "Pizza Margarita",
         ingredients = listOf("Tomates", "Mozzarella", "Basilic", "Huile d'olive"),
         description = "Une pizza italienne classique.",
+        publisher = "mary",
         imageUrl = "https://nyc3.digitaloceanspaces.com/food2fork/food2fork-static/featured_images/583/featured_image.png"
     )
 

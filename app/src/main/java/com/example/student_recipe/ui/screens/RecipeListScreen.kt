@@ -15,40 +15,59 @@ import androidx.navigation.compose.rememberNavController
 import com.example.student_recipe.model.Recipe
 import com.example.student_recipe.ui.components.RecipeCard
 import com.example.student_recipe.repository.RecipeRepository
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun RecipeListScreen(navController: NavController, repository: RecipeRepository) {
     var recipes by remember { mutableStateOf(emptyList<Recipe>()) }
-    var query by remember { mutableStateOf(TextFieldValue("")) }
+    var query by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var currentPage by remember { mutableStateOf(1) }
+    var endReached by remember { mutableStateOf(false) } // ✅ Empêcher le chargement infini
 
+    val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(query.text) {
-        currentPage = 1
-        loadRecipes()
+    // ✅ Ajout d'un debounce pour éviter les appels excessifs à l'API
+    LaunchedEffect(query) {
+        delay(500) // Attend 500ms après la dernière saisie avant d'exécuter la requête
+        if (query.isBlank()) {
+            // ✅ Si la recherche est vide, charger toutes les recettes (API + Local)
+            currentPage = 1
+            endReached = false
+            loadRecipes(repository, query, currentPage, onResult = {
+                recipes = it
+            }, onError = {
+                errorMessage = "Erreur de chargement des recettes."
+            })
+        } else {
+            // ✅ Si l'utilisateur tape un mot, faire uniquement une recherche locale
+            val results = repository.searchRecipes(query)
+            recipes = results
+        }
     }
 
-    fun loadRecipes() {
-        if (isLoading) return
+    suspend fun loadNextPage() {
+        if (isLoading || endReached) return // ✅ Empêche les appels multiples si une requête est déjà en cours
+        currentPage++
+        loadRecipes(repository, query, currentPage, onResult = {
+            if (it.isEmpty()) {
+                endReached = true // ✅ Si la nouvelle page est vide, on arrête le chargement
+            } else {
+                recipes += it
+            }
+        }, onError = {
 
-        isLoading = true
-        errorMessage = null
-        try {
-            val newRecipes = repository.getRecipes(query.text, currentPage)
-            recipes = if (currentPage == 1) newRecipes else recipes + newRecipes
-        } catch (e: Exception) {
             errorMessage = "Erreur de chargement des recettes."
-        }
-        isLoading = false
+        })
     }
 
     // Interface utilisateur
     Column(modifier = Modifier.fillMaxSize()) {
         SearchBar(query = query, onQueryChanged = { query = it })
 
-        if (isLoading) {
+        if (isLoading && recipes.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
@@ -62,6 +81,7 @@ fun RecipeListScreen(navController: NavController, repository: RecipeRepository)
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+
                 items(recipes) { recipe ->
                     RecipeCard(recipe = recipe, onClick = {
                         navController.navigate("details/${recipe.id}")
@@ -69,10 +89,14 @@ fun RecipeListScreen(navController: NavController, repository: RecipeRepository)
                 }
 
                 item {
-                    if (!isLoading && recipes.isNotEmpty()) {
-                        LaunchedEffect(recipes.size) {
-                            currentPage++
-                            loadRecipes()
+                    if (!isLoading && !endReached) {
+                        LaunchedEffect(Unit) {
+                            coroutineScope.launch {
+                                loadNextPage()
+                            }
+                        }
+                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
                         }
                     }
                 }
@@ -81,15 +105,32 @@ fun RecipeListScreen(navController: NavController, repository: RecipeRepository)
     }
 }
 
+suspend fun loadRecipes(
+    repository: RecipeRepository,
+    query: String,
+    page: Int,
+    onResult: (List<Recipe>) -> Unit,
+    onError: () -> Unit
+) {
+    try {
+        val newRecipes = repository.getRecipes(query, page)
+        onResult(newRecipes)
+    } catch (e: Exception) {
+        println(e)
+        onError()
+    }
+}
+
 @Composable
-fun SearchBar(query: TextFieldValue, onQueryChanged: (TextFieldValue) -> Unit) {
+fun SearchBar(query: String, onQueryChanged: (String) -> Unit) {
     TextField(
         value = query,
-        onValueChange = onQueryChanged,
+        onValueChange = { newText -> onQueryChanged(newText) },
         label = { Text("Rechercher des recettes") },
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(16.dp),
+        singleLine = true // ✅ Évite les retours à la ligne inutiles
     )
 }
 

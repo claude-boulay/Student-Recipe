@@ -16,4 +16,14 @@ interface RecipeDao {
 
     @Query("SELECT * FROM recipes WHERE id = :recipeId LIMIT 1")
     suspend fun getRecipeById(recipeId: Int): Recipe?
+
+    @Query("""
+        SELECT * FROM recipes
+            WHERE (:query IS NULL OR :query = '')
+    OR title LIKE '%' || :query || '%'
+    OR ingredients LIKE '%' || :query || '%'
+    OR description LIKE '%' || :query || '%'
+    """)
+    suspend fun searchRecipes(query: String): List<RecipeEntity>
+
 }
