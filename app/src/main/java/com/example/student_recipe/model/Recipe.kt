@@ -4,6 +4,7 @@ import com.example.student_recipe.data.db.RecipeEntity
 import com.google.gson.annotations.SerializedName
 
 data class Recipe(
+    @SerializedName("pk")
     val id: Int,
     val title: String,
     @SerializedName("featured_image")

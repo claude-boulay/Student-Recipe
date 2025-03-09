@@ -14,33 +14,33 @@ open class RecipeRepository(
     private val recipeDao: RecipeDao
 ) {
     suspend fun getRecipes(query: String, page: Int): List<Recipe> {
-        // 1️⃣ Charger d'abord les recettes locales
-        val localRecipes = recipeDao.getAllRecipes()
-        if (localRecipes.isNotEmpty()) {
-            return localRecipes.map { it.toDomainModel() } // Convertir RecipeEntity en Recipe
-        }
-
+        Log.e("Pagination",page.toString())
         return try {
-            // 2️⃣ Faire l'appel API
+            //  Faire l'appel API
             val response = recipeApi.searchRecipes(query, page)
+            Log.e("Recipe",response.toString())
             if (response.isSuccessful) {
                 val newRecipes = response.body()?.results ?: emptyList()
-
-                // 3️⃣ Convertir en RecipeEntity et insérer en base
+                Log.e("Recipe",newRecipes.toString())
+                // Convertir en RecipeEntity et insérer en base
                 val recipeEntities = newRecipes.map { it.toEntity() }
 
-                val test=recipeDao.insertAll(recipeEntities)
+                recipeDao.insertAll(recipeEntities)
 
-                Log.d("RecipeRepository", "Données après insertion : ${recipeDao.getAllRecipes()}")
-                // 4️⃣ Retourner les recettes stockées
-                return recipeDao.getAllRecipes().map { it.toDomainModel() }
+                // Retourner les recettes stockées
+                return newRecipes
 
             } else {
                 throw Exception("Erreur API: ${response.code()} - ${response.message()}")
             }
         } catch (e: Exception) {
-            println(e)
-            throw Exception("Erreur lors de la récupération des recettes: ${e.message}")
+            Log.e("Error","Erreur lors de la récupération des recettes: ${e.message}")
+            val localRecipes = recipeDao.getAllRecipes()
+            if (localRecipes.isNotEmpty() && (page==1 || page==2)) {
+                return localRecipes.map { it.toDomainModel() } // Convertir RecipeEntity en Recipe
+            }
+
+            throw Exception()
         }
     }
 

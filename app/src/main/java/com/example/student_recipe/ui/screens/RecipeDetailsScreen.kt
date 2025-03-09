@@ -25,9 +25,10 @@ fun RecipeDetailScreen(navController: NavController, recipeId: Int, repository: 
 
     LaunchedEffect(recipeId) {
         try {
+
             recipe = repository.getRecipeById(recipeId)
         } catch (e: Exception) {
-            errorMessage = "Erreur lors du chargement de la recette."
+            errorMessage = "Erreur lors du chargement de la recette."+e.message
         } finally {
             isLoading = false
         }
@@ -45,7 +46,7 @@ fun RecipeDetailScreen(navController: NavController, recipeId: Int, repository: 
 @Composable
 fun RecipeDetailContent(recipe: Recipe) {
     Column(modifier = Modifier.padding(16.dp)) {
-        Text(text = recipe.title, style = MaterialTheme.typography.titleLarge)
+        Text(text = recipe.title.replace("&nbsp;", " "), style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(16.dp))
 
         // Image avec Coil
@@ -67,6 +68,9 @@ fun RecipeDetailContent(recipe: Recipe) {
             items(recipe.ingredients) { ingredient ->
                 Text(text = "- $ingredient", modifier = Modifier.padding(4.dp))
             }
+        }
+        if(recipe.description!="N/A"){
+            Text(text = "Description : ", style=MaterialTheme.typography.titleSmall)
         }
     }
 }

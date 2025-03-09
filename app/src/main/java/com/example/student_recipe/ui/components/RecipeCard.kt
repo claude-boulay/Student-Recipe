@@ -31,7 +31,8 @@ fun RecipeCard(recipe: Recipe, onClick: () -> Unit) {
             .padding(8.dp)
             .clickable(onClick = onClick),
         shape = MaterialTheme.shapes.medium.copy(CornerSize(16.dp)),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+
     ) {
         Row(
             modifier = Modifier
@@ -55,6 +56,11 @@ fun RecipeCard(recipe: Recipe, onClick: () -> Unit) {
                     text = recipe.title,
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color.Black // ✅ Vérifie que la couleur est visible
+                )
+                Text(
+                    text = "Réalisée par : "+recipe.publisher,
+                    color = Color.Black,
+                    style=MaterialTheme.typography.bodyLarge,
                 )
             }
         }

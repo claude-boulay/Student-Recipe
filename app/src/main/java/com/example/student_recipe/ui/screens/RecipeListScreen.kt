@@ -3,6 +3,7 @@ package com.example.student_recipe.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,15 +26,14 @@ fun RecipeListScreen(navController: NavController, repository: RecipeRepository)
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var currentPage by remember { mutableStateOf(1) }
-    var endReached by remember { mutableStateOf(false) } // ✅ Empêcher le chargement infini
+    var endReached by remember { mutableStateOf(false) }
 
     val coroutineScope = rememberCoroutineScope()
+    val listState = rememberLazyListState()
 
-    // ✅ Ajout d'un debounce pour éviter les appels excessifs à l'API
     LaunchedEffect(query) {
-        delay(500) // Attend 500ms après la dernière saisie avant d'exécuter la requête
+        delay(500)
         if (query.isBlank()) {
-            // ✅ Si la recherche est vide, charger toutes les recettes (API + Local)
             currentPage = 1
             endReached = false
             loadRecipes(repository, query, currentPage, onResult = {
@@ -42,28 +42,42 @@ fun RecipeListScreen(navController: NavController, repository: RecipeRepository)
                 errorMessage = "Erreur de chargement des recettes."
             })
         } else {
-            // ✅ Si l'utilisateur tape un mot, faire uniquement une recherche locale
             val results = repository.searchRecipes(query)
             recipes = results
         }
     }
 
     suspend fun loadNextPage() {
-        if (isLoading || endReached) return // ✅ Empêche les appels multiples si une requête est déjà en cours
-        currentPage++
-        loadRecipes(repository, query, currentPage, onResult = {
-            if (it.isEmpty()) {
-                endReached = true // ✅ Si la nouvelle page est vide, on arrête le chargement
+        if (isLoading || endReached || query.isNotBlank()) return
+        isLoading = true
+        currentPage=recipes.size/30+2
+        loadRecipes(repository, query, currentPage, onResult = { newRecipes ->
+            if (newRecipes.isEmpty()) {
+                endReached = true
             } else {
-                recipes += it
+                recipes += newRecipes
+
+                // ✅ Incrémenter `currentPage` toutes les 30 recettes
+                if (recipes.size % 30 == 0) {
+                    currentPage=recipes.size/30+2
+                }
             }
         }, onError = {
-
             errorMessage = "Erreur de chargement des recettes."
         })
+        isLoading = false
     }
 
-    // Interface utilisateur
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+            .collect { lastVisibleItemIndex ->
+                val totalItems = recipes.size
+                if (lastVisibleItemIndex != null && lastVisibleItemIndex >= totalItems - 5 && !isLoading) {
+                    loadNextPage()
+                }
+            }
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
         SearchBar(query = query, onQueryChanged = { query = it })
 
@@ -77,11 +91,11 @@ fun RecipeListScreen(navController: NavController, repository: RecipeRepository)
             }
         } else {
             LazyColumn(
+                state = listState,
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-
                 items(recipes) { recipe ->
                     RecipeCard(recipe = recipe, onClick = {
                         navController.navigate("details/${recipe.id}")
@@ -89,12 +103,7 @@ fun RecipeListScreen(navController: NavController, repository: RecipeRepository)
                 }
 
                 item {
-                    if (!isLoading && !endReached) {
-                        LaunchedEffect(Unit) {
-                            coroutineScope.launch {
-                                loadNextPage()
-                            }
-                        }
+                    if (isLoading) {
                         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                             CircularProgressIndicator()
                         }
