@@ -8,16 +8,26 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.student_recipe.model.Recipe
 import com.example.student_recipe.ui.components.RecipeCard
 import com.example.student_recipe.repository.RecipeRepository
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+
+// Barre de recherche pour filtrer les recettes
+@Composable
+fun SearchBar(query: String, onQueryChanged: (String) -> Unit) {
+    TextField(
+        value = query,
+        onValueChange = { newText -> onQueryChanged(newText) },
+        label = { Text("Search recipes") },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        singleLine = true // Évite les retours à la ligne inutiles
+    )
+}
 
 @Composable
 fun RecipeListScreen(navController: NavController, repository: RecipeRepository) {
@@ -31,15 +41,16 @@ fun RecipeListScreen(navController: NavController, repository: RecipeRepository)
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
+    // Lancement de la requête lors de la modification de la requête de recherche
     LaunchedEffect(query) {
-        delay(500)
+        delay(500) // Délai avant de lancer la recherche
         if (query.isBlank()) {
             currentPage = 1
             endReached = false
             loadRecipes(repository, query, currentPage, onResult = {
                 recipes = it
             }, onError = {
-                errorMessage = "Erreur de chargement des recettes."
+                errorMessage = "Error loading recipes"
             })
         } else {
             val results = repository.searchRecipes(query)
@@ -47,61 +58,69 @@ fun RecipeListScreen(navController: NavController, repository: RecipeRepository)
         }
     }
 
+    // Fonction pour charger la prochaine page de recettes
     suspend fun loadNextPage() {
         if (isLoading || endReached || query.isNotBlank()) return
         isLoading = true
         currentPage=recipes.size/30+2
         loadRecipes(repository, query, currentPage, onResult = { newRecipes ->
             if (newRecipes.isEmpty()) {
-                endReached = true
+                endReached = true // Fin des résultats
             } else {
                 recipes += newRecipes
 
-                // ✅ Incrémenter `currentPage` toutes les 30 recettes
+                // Incrémenter `currentPage` toutes les 30 recettes
                 if (recipes.size % 30 == 0) {
                     currentPage=recipes.size/30+2
                 }
             }
         }, onError = {
-            errorMessage = "Erreur de chargement des recettes."
+            errorMessage = "Error loading recipes."
         })
         isLoading = false
     }
 
+    // Détection de la dernière item visible pour charger la page suivante
     LaunchedEffect(listState) {
         snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
             .collect { lastVisibleItemIndex ->
                 val totalItems = recipes.size
                 if (lastVisibleItemIndex != null && lastVisibleItemIndex >= totalItems - 5 && !isLoading) {
-                    loadNextPage()
+                    loadNextPage() // Chargement de la prochaine page
                 }
             }
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
+        // Barre de recherche pour filtrer les recettes
         SearchBar(query = query, onQueryChanged = { query = it })
 
+        // Affichage d'un indicateur de chargement pendant que les recettes sont récupérées
         if (isLoading && recipes.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                CircularProgressIndicator() // Indicataire de chargement
             }
         } else if (errorMessage != null) {
+            // Affichage d'un message d'erreur si le chargement échoue
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = errorMessage ?: "Une erreur est survenue", color = MaterialTheme.colorScheme.error)
+                Text(text = errorMessage ?: "An error occurred", color = MaterialTheme.colorScheme.error)
             }
         } else {
+            // Liste des recettes
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // Affichage des recettes dans la liste
                 items(recipes) { recipe ->
                     RecipeCard(recipe = recipe, onClick = {
-                        navController.navigate("details/${recipe.id}")
+                        navController.navigate("details/${recipe.id}") // Navigation vers le détail de la recette
                     })
                 }
 
+                // Affichage du loader à la fin de la liste si des recettes sont en train de se charger
                 item {
                     if (isLoading) {
                         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -114,6 +133,7 @@ fun RecipeListScreen(navController: NavController, repository: RecipeRepository)
     }
 }
 
+// Fonction pour charger les recettes depuis le repository
 suspend fun loadRecipes(
     repository: RecipeRepository,
     query: String,
@@ -123,28 +143,9 @@ suspend fun loadRecipes(
 ) {
     try {
         val newRecipes = repository.getRecipes(query, page)
-        onResult(newRecipes)
+        onResult(newRecipes) // Retourner les recettes chargées
     } catch (e: Exception) {
         println(e)
-        onError()
+        onError() // Si erreur, appeler le callback d'erreur
     }
-}
-
-@Composable
-fun SearchBar(query: String, onQueryChanged: (String) -> Unit) {
-    TextField(
-        value = query,
-        onValueChange = { newText -> onQueryChanged(newText) },
-        label = { Text("Rechercher des recettes") },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        singleLine = true // ✅ Évite les retours à la ligne inutiles
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewRecipeList() {
-    val navController = rememberNavController()
 }

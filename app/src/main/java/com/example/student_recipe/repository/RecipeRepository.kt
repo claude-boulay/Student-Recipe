@@ -1,6 +1,5 @@
 package com.example.student_recipe.repository
 
-
 import android.util.Log
 import com.example.student_recipe.data.db.RecipeDao
 import com.example.student_recipe.data.db.RecipeEntity
@@ -14,33 +13,34 @@ open class RecipeRepository(
     private val recipeDao: RecipeDao
 ) {
     suspend fun getRecipes(query: String, page: Int): List<Recipe> {
-        Log.e("Pagination",page.toString())
+        Log.e("Pagination", page.toString())
         return try {
-            //  Faire l'appel API
+            // Appel API pour récupérer les recettes
             val response = recipeApi.searchRecipes(query, page)
-            Log.e("Recipe",response.toString())
+            Log.e("Recipe", response.toString())
+
             if (response.isSuccessful) {
                 val newRecipes = response.body()?.results ?: emptyList()
-                Log.e("Recipe",newRecipes.toString())
-                // Convertir en RecipeEntity et insérer en base
-                val recipeEntities = newRecipes.map { it.toEntity() }
+                Log.e("Recipe", newRecipes.toString())
 
+                // Convertir les résultats en RecipeEntity et les stocker en base de données
+                val recipeEntities = newRecipes.map { it.toEntity() }
                 recipeDao.insertAll(recipeEntities)
 
-                // Retourner les recettes stockées
-                return newRecipes
-
+                return newRecipes // Retourne les recettes obtenues depuis l'API
             } else {
-                throw Exception("Erreur API: ${response.code()} - ${response.message()}")
+                throw Exception("API error: ${response.code()} - ${response.message()}")
             }
         } catch (e: Exception) {
-            Log.e("Error","Erreur lors de la récupération des recettes: ${e.message}")
+            Log.e("Error", "Error while fetching recipes: ${e.message}")
+
+            // Récupération des recettes locales si l'API échoue
             val localRecipes = recipeDao.getAllRecipes()
-            if (localRecipes.isNotEmpty() && (page==1 || page==2)) {
-                return localRecipes.map { it.toDomainModel() } // Convertir RecipeEntity en Recipe
+            if (localRecipes.isNotEmpty() && (page == 1 || page == 2)) {
+                return localRecipes.map { it.toDomainModel() } // Conversion en Recipe
             }
 
-            throw Exception()
+            throw Exception() // Propage l'erreur si aucune donnée locale n'est disponible
         }
     }
 
@@ -48,25 +48,27 @@ open class RecipeRepository(
         return try {
             val response = recipeApi.getRecipeById(recipeId)
             if (response.isSuccessful) {
-                response.body() ?: recipeDao.getRecipeById(recipeId) // ✅ Vérification et récupération des données
+                response.body() ?: recipeDao.getRecipeById(recipeId) // Vérifie si l'API renvoie des données
             } else {
-                recipeDao.getRecipeById(recipeId) // ✅ Retourne les données locales en cas d’échec de l'API
+                recipeDao.getRecipeById(recipeId) // Retourne la recette locale en cas d'échec API
             }
         } catch (e: Exception) {
-            recipeDao.getRecipeById(recipeId) // ✅ Évite le crash en cas d’erreur API
+            recipeDao.getRecipeById(recipeId) // Évite le crash en cas d'erreur API
         }
     }
+
     suspend fun searchRecipes(query: String): List<Recipe> {
-        return recipeDao.searchRecipes(query).map { it.toDomainModel() }
+        return recipeDao.searchRecipes(query).map { it.toDomainModel() } // Recherche locale des recettes
     }
 }
 
+// Fonction d'extension pour convertir une RecipeEntity en Recipe
 private fun RecipeEntity.toRecipe(): Recipe {
     return Recipe(
         id = this.id,
         title = this.title,
         ingredients = this.ingredients,
-        imageUrl =this.imageUrl,
+        imageUrl = this.imageUrl,
         description = this.description,
         publisher = this.publisher
     )
