@@ -21,6 +21,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.student_recipe.function.decodeHtml
 import com.example.student_recipe.model.Recipe
 
 @Composable
@@ -43,7 +44,7 @@ fun RecipeCard(recipe: Recipe, onClick: () -> Unit) {
             // Chargement de l'image de la recette
             ImageFromUrl(
                 recipe.imageUrl,
-                recipe.title,
+                decodeHtml(recipe.title),
             )
 
             Spacer(modifier = Modifier.width(16.dp)) // Espacement entre l'image et le texte
@@ -55,12 +56,12 @@ fun RecipeCard(recipe: Recipe, onClick: () -> Unit) {
             ) {
                 // Affichage du titre de la recette
                 Text(
-                    text = recipe.title,
+                    text =decodeHtml(recipe.title),
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color.Black
                 )
                 Text(
-                    text = "By " + recipe.publisher,
+                    text = "By " + decodeHtml(recipe.publisher),
                     color = Color.Black,
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontSize = 10.sp,

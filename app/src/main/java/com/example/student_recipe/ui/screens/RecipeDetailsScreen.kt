@@ -24,6 +24,7 @@ import com.example.student_recipe.repository.RecipeRepository
 import com.example.student_recipe.ui.theme.CustomBrown
 import com.example.student_recipe.ui.theme.CustomDarkBrown
 import androidx.compose.ui.text.TextStyle
+import com.example.student_recipe.function.decodeHtml
 import com.example.student_recipe.ui.theme.CustomLightBrown
 
 @Composable
@@ -66,7 +67,7 @@ fun RecipeDetailContent(recipe: Recipe) {
         Column(modifier = Modifier.padding(16.dp)) {
             // Affichage du titre de la recette
             Text(
-                text = recipe.title.replace("&nbsp;", " "),
+                text = decodeHtml(recipe.title),
                 style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                 color = CustomDarkBrown,
                 textAlign = TextAlign.Center,
@@ -106,8 +107,9 @@ fun RecipeDetailContent(recipe: Recipe) {
                     .clip(RoundedCornerShape(12.dp))
             ) {
                 items(recipe.ingredients) { ingredient ->
+                    val ingredientDecode= decodeHtml(ingredient)
                     Text(
-                        text = "- $ingredient",
+                        text = "- $ingredientDecode",
                         style = TextStyle(
                             fontSize = 16.sp
                         ),
@@ -125,7 +127,7 @@ fun RecipeDetailContent(recipe: Recipe) {
                     color = MaterialTheme.colorScheme.secondary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(text = recipe.description, modifier = Modifier.padding(4.dp))
+                Text(text = decodeHtml(recipe.description), modifier = Modifier.padding(4.dp))
             }
         }
     }

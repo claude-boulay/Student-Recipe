@@ -17,11 +17,11 @@ open class RecipeRepository(
         return try {
             // Appel API pour récupérer les recettes
             val response = recipeApi.searchRecipes(query, page)
-            Log.e("Recipe", response.toString())
+            //Log.e("Recipe", response.toString())
 
             if (response.isSuccessful) {
                 val newRecipes = response.body()?.results ?: emptyList()
-                Log.e("Recipe", newRecipes.toString())
+                //Log.e("Recipe", newRecipes.toString())
 
                 // Convertir les résultats en RecipeEntity et les stocker en base de données
                 val recipeEntities = newRecipes.map { it.toEntity() }
@@ -36,8 +36,10 @@ open class RecipeRepository(
 
             // Récupération des recettes locales si l'API échoue
             val localRecipes = recipeDao.getAllRecipes()
-            if (localRecipes.isNotEmpty() && (page == 1 || page == 2)) {
+            if (localRecipes.isNotEmpty() && (page == 1 )) {
                 return localRecipes.map { it.toDomainModel() } // Conversion en Recipe
+            }else{
+                return emptyList()
             }
 
             throw Exception() // Propage l'erreur si aucune donnée locale n'est disponible
