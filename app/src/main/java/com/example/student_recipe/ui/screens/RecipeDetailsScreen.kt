@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -24,6 +25,7 @@ import com.example.student_recipe.repository.RecipeRepository
 import com.example.student_recipe.ui.theme.CustomBrown
 import com.example.student_recipe.ui.theme.CustomDarkBrown
 import androidx.compose.ui.text.TextStyle
+import com.example.student_recipe.R
 import com.example.student_recipe.function.decodeHtml
 import com.example.student_recipe.ui.theme.CustomLightBrown
 
@@ -56,6 +58,7 @@ fun RecipeDetailScreen(navController: NavController, recipeId: Int, repository: 
 
 @Composable
 fun RecipeDetailContent(recipe: Recipe) {
+    var hasError by remember { mutableStateOf(false) }
     Card(
         modifier = Modifier
             .fillMaxSize()
@@ -76,16 +79,29 @@ fun RecipeDetailContent(recipe: Recipe) {
             Spacer(modifier = Modifier.height(16.dp))
 
             // Chargement de l'image de la recette avec Coil
-            val painter = rememberAsyncImagePainter(recipe.imageUrl)
-            Image(
-                painter = painter,
-                contentDescription = "Recipe image",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(250.dp)
-                    .clip(RoundedCornerShape(12.dp)),
-                contentScale = ContentScale.Crop
-            )
+            val painter = rememberAsyncImagePainter(recipe.imageUrl,onError = {hasError=true })
+            if(!hasError){
+                Image(
+                    painter = painter,
+                    contentDescription = "Recipe image",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp)
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            }else{
+                Image(
+                    painter = painterResource(id = R.drawable.imagenotfound),
+                    contentDescription = "Recipe image",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp)
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
 
             // Affichage des ingrédients
