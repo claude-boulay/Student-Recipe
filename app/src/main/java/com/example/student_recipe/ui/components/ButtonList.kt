@@ -1,6 +1,5 @@
 package com.example.student_recipe.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,15 +17,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
-
 import androidx.compose.ui.unit.dp
-
+import com.example.student_recipe.ui.theme.CustomDarkBrown
+import com.example.student_recipe.ui.theme.CustomLightBrown
 
 @Composable
 fun IngredientFilterBar(
-    onQueryChanged: (String) -> Unit // ✅ Met à jour la barre de recherche
+    onQueryChanged: (String) -> Unit // Callback pour gérer la sélection d'un ingrédient
 ) {
-    var selectedIngredient by remember { mutableStateOf<String?>(null) }
+    var selectedIngredient by remember { mutableStateOf<String?>(null) } // Stocke l'ingrédient sélectionné
+
+    // Liste d'ingrédients affichés dans la barre
     val ingredients = listOf(
         "Tomato", "Chicken", "Cheese", "Fish", "Beef", "Chocolate", "Pork", "Soup", "Pasta", "Ice",
         "Rice", "Garlic", "Onion", "Mushroom", "Carrot", "Potato", "Lettuce", "Cucumber", "Pepper", "Spinach",
@@ -40,24 +41,28 @@ fun IngredientFilterBar(
     )
 
     LazyRow(
-        modifier = Modifier.fillMaxWidth().padding(8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp) // Espacement entre les éléments
     ) {
         items(ingredients) { ingredient ->
-            val isSelected = selectedIngredient == ingredient
-            Button(
+            val isSelected = selectedIngredient == ingredient // Vérifie si l'ingrédient est sélectionné
 
+            Button(
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isSelected) Color(0xFFA56A32) else Color(0xFFFFFBF7), // Marron clair et foncé
+                    containerColor = if (isSelected) Color(0xFFA56A32) else Color(0xFFFFFBF7),
                     contentColor = Color.White
                 ),
-                shape = RoundedCornerShape(20.dp),
-                modifier = Modifier.padding(horizontal = 4.dp).border(2.dp, Color(0xFFFFA500),shape=RoundedCornerShape(20.dp)),
+                shape = RoundedCornerShape(20.dp), // Bords arrondis du bouton
+                modifier = Modifier
+                    .padding(horizontal = 6.dp)
+                    .border(2.dp, CustomLightBrown, shape = RoundedCornerShape(20.dp)),
                 onClick = {
-                    onQueryChanged(ingredient) // Insère l’ingrédient dans la barre de recherche
+                    onQueryChanged(ingredient) // Envoie l'ingrédient sélectionné à la fonction externe
                 }
             ) {
-                Text(text = ingredient, color = Color(0xFFFFA500))
+                Text(text = ingredient, color = CustomDarkBrown)
             }
         }
     }

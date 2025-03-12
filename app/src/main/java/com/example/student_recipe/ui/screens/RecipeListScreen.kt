@@ -1,28 +1,19 @@
 package com.example.student_recipe.ui.screens
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.student_recipe.model.Recipe
 import com.example.student_recipe.ui.components.RecipeCard
 import com.example.student_recipe.repository.RecipeRepository
 import com.example.student_recipe.ui.components.IngredientFilterBar
-import com.example.student_recipe.ui.theme.CustomDarkBrown
 import kotlinx.coroutines.delay
 import  com.example.student_recipe.ui.components.SearchBar
 
@@ -36,7 +27,6 @@ fun RecipeListScreen(navController: NavController, repository: RecipeRepository)
     var currentPage by remember { mutableStateOf(1) }
     var endReached by remember { mutableStateOf(false) }
 
-    val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
     //  Recherche : Si la requête est vide, on charge toutes les recettes
